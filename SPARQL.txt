@@ -1,0 +1,146 @@
+
+1> Which actors have played the character of Sherlock Holmes and when were those films released in the USA?
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX : <http://localhost/ontology/COMP6215/cinema-chain.owl#>
+SELECT ?actor ?releaseYear
+WHERE {
+    ?performance :hasRole ?character .
+    ?character :name "Sherlock Holmes"^^xsd:string .
+    ?performance ?performedby ?actor .
+    ?performedby rdfs:subPropertyOf :performedBy .
+    ?performance :performanceInFilm ?film .
+    ?release :isReleaseOf-US ?film .
+    ?release :releaseYear ?releaseYear .
+}
+
+
+--------------------------------------------
+2> Which UK-born actors played James Bond since 1980?
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX : <http://localhost/ontology/COMP6215/cinema-chain.owl#>
+SELECT  DISTINCT ?actor 
+WHERE {
+    ?performance :hasRole ?character .
+    ?character :name "James Bond"^^xsd:string .
+    ?performance ?performedby ?actor .
+    ?performedby rdfs:subPropertyOf :performedBy .
+    ?actor :bornIn ?loc . ?loc rdf:type :United_Kingdom .
+    ?performance :performanceInFilm ?film .
+    ?release :isReleaseOf-US ?film .
+    ?release :releaseYear ?releaseYear .
+    FILTER(?releaseYear >= 1980)
+}
+
+
+--------------------------------------------
+3> Which movies are filmed at locations in Europe?
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX : <http://localhost/ontology/COMP6215/cinema-chain.owl#>
+SELECT  DISTINCT ?film
+WHERE {
+    ?filmloc rdf:type :Filming_Location .
+    ?film :hasFilmLocation ?filmloc .
+    ?filmloc :isLocatedIn ?loc .
+    ?loc rdf:type/rdfs:subClassOf* :Europe .
+}
+
+
+--------------------------------------------
+4> Which actors won the Academy Award more than once?
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX : <http://localhost/ontology/COMP6215/cinema-chain.owl#>
+SELECT  ?actor 
+WHERE {
+    ?award :wasAwardedTo ?actor .
+    ?actor rdf:type :Actor .
+    ?award rdf:type/rdfs:subClassOf* :Award .
+}
+group by ?actor
+having (count(?actor) >= 2)
+order by ?actor
+
+
+--------------------------------------------
+5> Which is the most popular genre for Academy-Award-winning films?
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX : <http://localhost/ontology/COMP6215/cinema-chain.owl#>
+SELECT  ?genre
+WHERE {
+    ?genre rdfs:subClassOf :Genre .
+    ?film rdf:type ?genre .
+    ?award :awardForFilm ?film . 
+}
+group by ?genre
+order by DESC(COUNT(?award))
+LIMIT 1
+
+
+
+
+--------------------------------------------
+Expected results:
+
+1>
+'Person: Rovert Downey Jr.', "2011"^^<http://www.w3.org/2001/XMLSchema#integer>
+'Person: Rovert Downey Jr.', "2009"^^<http://www.w3.org/2001/XMLSchema#integer>
+'Person: Katherine Hengqing Pan', "2013"^^<http://www.w3.org/2001/XMLSchema#integer>
+
+Note: I used the US release date.
+
+2>
+'Person: Timothy Dalton'		born in Colwyn Bay, UK
+'Person: Roger Moore'			born in Stockwell, UK
+'Person: Daniel Craig'			born in Chester, UK
+
+Sean Connery should NOT show (before year 1980).
+Note (1): I did not add counties for the UK (not necessary to answer the competency questions).
+Note (2): I used the US release date.
+
+3>
+'Film: Four Weddings and A Funeral'	'has Film Location' Albury Park, Guildford, UK (among others)
+'Film: Casino Royale'			'has Film Location' Goldingtons (Sarrat, UK)
+'Film: Sherlock Holmes (2009)'
+'Film: A View to a Kill'
+
+4>
+'Person: Hilary Swank' 		(Best Actress AA72 and Best Actress AA77)
+'Person: Christoph Waltz'	(Best Supporting Actor AA82 and Best Supporting Actor AA85)
+'Person: Jessica Lange'		(Best Supporting Actor AA55 and Best Actress AA67)
+'Person: Jodie Foster'		(Best Actress AA61 and Best Actress AA64)
+'Person: Cate Blanchett'	(Best Supporting Actress AA77 and Best Actress AA86)
+'Person: Daniel Day-Lewis'	(Best Actor AA62 and Best Actor AA80 and Best Actor AA85)
+'Person: Denzel Washington'	(Best Supporting Actor AA62 and Best Actor AA74)
+'Person: Kevin Spacey'		(Best Supporting Actor AA68 and Best Actor AA72)
+'Person: Michael Caine'		(Best Supporting Actor AA59 and Best Supporting Actor AA72)
+'Person: Sally Field'		(Best Actress AA52 and Best Actress AA57)
+'Person: Meryl Streep'		(Best Supporting Actress AA52 and Best Actress AA55 and Best Actress AA84)
+'Person: Dianne Wiest'		(Best Supporting Actress AA59 and Best Supporting Acress AA67)
+'Person: Tom Hanks'		(Best Actor AA66 and Best Actor AA67)
+'Person: Dustin Hoffman'	(Best Actor AA52 and Best Actor AA61)
+'Person: Melvyn Douglas'	(Best Supporting Actor AA36 and Best Supporting Actor AA52)
+
+5>
+Drama
+
+
+EOF
